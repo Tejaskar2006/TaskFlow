@@ -10,12 +10,13 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
     const user = req.user!;
     const now = new Date();
 
-    // Filter based on role
-    const projectFilter = user.role === 'admin' ? {} : { 'members.user': user._id };
+    // Filter projects where the user is a member
+    const projectFilter = { 'members.user': user._id };
     const projects = await Project.find(projectFilter).select('_id');
     const projectIds = projects.map(p => p._id);
 
-    const taskFilter = user.role === 'admin' ? {} : { projectId: { $in: projectIds } };
+    // Filter tasks belonging to those projects
+    const taskFilter = { projectId: { $in: projectIds } };
 
     const [
       totalTasks,
@@ -40,9 +41,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
       Task.countDocuments({ ...taskFilter, assignedTo: user._id }),
       Project.countDocuments(projectFilter),
       Project.countDocuments({ ...projectFilter, status: 'active' }),
-      ActivityLog.find(
-        user.role === 'admin' ? {} : { projectId: { $in: projectIds } }
-      )
+      ActivityLog.find({ projectId: { $in: projectIds } })
         .populate('user', 'name email avatar')
         .sort({ createdAt: -1 })
         .limit(10)
