@@ -8,13 +8,13 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { connectDB } from './config/database';
 import authRoutes from './routes/auth.routes';
-import projectRoutes from '../src/routes/project.routes';
-import taskRoutes from '../src/routes/task.routes';
-import dashboardRoutes from '../src/routes/dashboard.routes';
-import userRoutes from '../src/routes/user.routes';
-import { errorHandler } from '../src/middleware/error.middleware';
-import { notFound } from '../src/middleware/notFound.middleware';
-import { setupSocketIO } from '../src/config/socket';
+import projectRoutes from './routes/project.routes';
+import taskRoutes from './routes/task.routes';
+import dashboardRoutes from './routes/dashboard.routes';
+import userRoutes from './routes/user.routes';
+import { errorHandler } from './middleware/error.middleware';
+import { notFound } from './middleware/notFound.middleware';
+import { setupSocketIO } from './config/socket';
 
 dotenv.config();
 
