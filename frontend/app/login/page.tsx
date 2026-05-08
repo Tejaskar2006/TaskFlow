@@ -163,7 +163,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="mt-6 rounded-xl border border-slate-700 bg-slate-800/50 p-4">
+          <div className="mt-6 rounded-xl border border-slate-700 bg-slate-800/50 p-4 ">
             <p className="mb-2 text-xs font-medium text-slate-400">Demo credentials 1</p>
             <p className="text-xs text-slate-300">Email: <span className="text-indigo-400">test@taskflow.com</span></p>
             <p className="text-xs text-slate-300">Password: <span className="text-indigo-400">password123</span></p>
