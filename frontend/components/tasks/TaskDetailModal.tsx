@@ -1,15 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { Task } from '@/types';
+import { Task, Subtask } from '@/types';
 import { useTaskStore } from '@/store/taskStore';
 import { toast } from 'sonner';
 import {
   X, CheckSquare, Calendar, Flag, Clock, MessageSquare, Send,
-  MoreVertical, Trash2
+  MoreVertical, Trash2, Sparkles, Bot, Loader2, Check
 } from 'lucide-react';
 import { cn, PRIORITY_CONFIG, STATUS_CONFIG, formatDate, formatRelativeTime, getInitials, getAvatarColor } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
+import { useAIStore } from '@/store/aiStore';
+
 
 interface TaskDetailModalProps {
   task: Task;
@@ -18,11 +20,13 @@ interface TaskDetailModalProps {
 }
 
 export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps) {
-  const { addComment, deleteTask } = useTaskStore();
+  const { addComment, deleteTask, updateTask } = useTaskStore();
+  const { summarizeTask, isGenerating } = useAIStore();
   const { user } = useAuthStore();
   const [commentContent, setCommentContent] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
 
   const priorityInfo = PRIORITY_CONFIG[task.priority];
   const statusInfo = STATUS_CONFIG[task.status];
@@ -53,10 +57,30 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
     }
   };
 
+  const handleAISummarize = async () => {
+    try {
+      const summary = await summarizeTask(task._id);
+      setAiSummary(summary);
+    } catch (err) {
+      toast.error('Summarization failed');
+    }
+  };
+
+  const toggleSubtask = async (subtaskId: string) => {
+    const updatedSubtasks = task.subtasks.map(st =>
+      st._id === subtaskId ? { ...st, isCompleted: !st.isCompleted } : st
+    );
+    try {
+      await updateTask(task._id, { subtasks: updatedSubtasks as any });
+    } catch (err) {
+      toast.error('Failed to update subtask');
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm sm:p-6 lg:p-8">
       <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col md:flex-row max-h-[90vh] overflow-hidden">
-        
+
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col border-r border-slate-800 overflow-y-auto">
           <div className="p-6 md:p-8 flex-1">
@@ -69,7 +93,7 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
                   {priorityInfo.label}
                 </span>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <div className="relative">
                   <button onClick={() => setShowMenu(!showMenu)} className="p-1.5 text-slate-500 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
@@ -107,11 +131,73 @@ export default function TaskDetailModal({ task, onClose }: TaskDetailModalProps)
             </div>
 
             {/* Comments Section */}
-            <div>
-              <h3 className="text-sm font-semibold text-slate-300 mb-4 flex items-center gap-2">
-                <MessageSquare className="w-4 h-4" /> Activity & Comments ({task.comments.length})
-              </h3>
-              
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+                  <Bot className="w-4 h-4 text-indigo-400" /> Checklist
+                </h3>
+              </div>
+              <div className="space-y-2">
+                {task.subtasks && task.subtasks.length > 0 ? (
+                  task.subtasks.map((st) => (
+                    <button
+                      key={st._id}
+                      onClick={() => toggleSubtask(st._id)}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl bg-slate-800/20 border border-slate-800 hover:border-slate-700 transition-colors group"
+                    >
+                      <div className={cn(
+                        "w-5 h-5 rounded-md border flex items-center justify-center transition-colors",
+                        st.isCompleted ? "bg-indigo-500 border-indigo-500" : "border-slate-700 bg-slate-900 group-hover:border-slate-600"
+                      )}>
+                        {st.isCompleted && <Check className="w-3.5 h-3.5 text-white" />}
+                      </div>
+                      <span className={cn(
+                        "text-sm transition-all",
+                        st.isCompleted ? "text-slate-500 line-through" : "text-slate-300"
+                      )}>
+                        {st.title}
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-xs text-slate-500 italic px-1">No checklist items yet.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4" /> Activity & Comments ({task.comments.length})
+                </h3>
+                <button
+                  onClick={handleAISummarize}
+                  disabled={isGenerating || task.comments.length === 0}
+                  className="text-xs flex items-center gap-1.5 text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 px-3 py-1 rounded-full transition-colors disabled:opacity-50"
+                >
+                  {isGenerating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                  AI Summarize
+                </button>
+              </div>
+
+              {aiSummary && (
+                <div className="mb-4 p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/20 relative overflow-hidden group">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500" />
+                  <div className="flex items-center gap-2 mb-2 text-indigo-400 font-medium text-xs">
+                    <Sparkles className="w-3 h-3" /> AI SUMMARY
+                  </div>
+                  <p className="text-sm text-slate-300 leading-relaxed italic">
+                    &quot;{aiSummary}&quot;
+                  </p>
+                  <button
+                    onClick={() => setAiSummary(null)}
+                    className="absolute top-2 right-2 p-1 text-slate-600 hover:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+
               <div className="space-y-4 mb-6">
                 {task.comments.map((comment) => (
                   <div key={comment._id} className="flex gap-3">

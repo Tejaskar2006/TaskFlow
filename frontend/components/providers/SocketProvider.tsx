@@ -5,10 +5,12 @@ import { useAuthStore } from '@/store/authStore';
 import { useTaskStore } from '@/store/taskStore';
 import { connectSocket, disconnectSocket, getSocket } from '@/lib/socket';
 import { toast } from 'sonner';
+import { useNotificationStore } from '@/store/notificationStore';
 
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const { user, isAuthenticated } = useAuthStore();
   const { updateTaskOptimistic, addTaskOptimistic, removeTaskOptimistic } = useTaskStore();
+  const { addNotification } = useNotificationStore();
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -37,6 +39,14 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
       socket.on('task:assigned', ({ task, message }) => {
         toast.info(message);
+        addNotification({
+          _id: `socket-${Date.now()}`,
+          title: 'Task Assigned',
+          description: message,
+          time: new Date().toISOString(),
+          isRead: false,
+          type: 'task'
+        });
         updateTaskOptimistic(task);
       });
 

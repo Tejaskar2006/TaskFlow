@@ -13,9 +13,14 @@ interface LogActivityParams {
 
 export const logActivity = async (params: LogActivityParams): Promise<void> => {
   try {
-    await ActivityLog.create(params);
+    const { userId, ...rest } = params;
+
+    await ActivityLog.create({
+      ...rest,
+      user: userId,
+    });
   } catch (error) {
-    // Non-critical — don't throw
+    // Non-critical - do not block the main request flow.
     console.error('Failed to log activity:', error);
   }
 };

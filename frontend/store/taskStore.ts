@@ -55,7 +55,16 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     try {
       const { data } = await api.post<ApiResponse<Task>>('/tasks', taskData);
       const newTask = data.data!;
-      set((state) => ({ tasks: [newTask, ...state.tasks] }));
+      set((state) => {
+        const existingIndex = state.tasks.findIndex((task) => task._id === newTask._id);
+        if (existingIndex >= 0) {
+          return {
+            tasks: state.tasks.map((task) => (task._id === newTask._id ? newTask : task)),
+          };
+        }
+
+        return { tasks: [newTask, ...state.tasks] };
+      });
       return newTask;
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to create task';
@@ -125,8 +134,20 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
   setFilters: (filters) => set({ filters }),
   setCurrentTask: (task) => set({ currentTask: task }),
-  addTaskOptimistic: (task) => set((state) => ({ tasks: [task, ...state.tasks] })),
-  updateTaskOptimistic: (task) => set((state) => ({ tasks: state.tasks.map((t) => (t._id === task._id ? task : t)) })),
+  addTaskOptimistic: (task) => set((state) => {
+    const existingIndex = state.tasks.findIndex((currentTask) => currentTask._id === task._id);
+    if (existingIndex >= 0) {
+      return {
+        tasks: state.tasks.map((currentTask) => (currentTask._id === task._id ? task : currentTask)),
+      };
+    }
+
+    return { tasks: [task, ...state.tasks] };
+  }),
+  updateTaskOptimistic: (task) => set((state) => ({
+    tasks: state.tasks.map((t) => (t._id === task._id ? task : t)),
+    currentTask: state.currentTask?._id === task._id ? task : state.currentTask,
+  })),
   removeTaskOptimistic: (taskId) => set((state) => ({ tasks: state.tasks.filter((t) => t._id !== taskId) })),
   clearError: () => set({ error: null }),
 }));

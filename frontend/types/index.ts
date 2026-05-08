@@ -76,6 +76,12 @@ export interface TaskComment {
   createdAt: string;
 }
 
+export interface Subtask {
+  _id: string;
+  title: string;
+  isCompleted: boolean;
+}
+
 export interface Task {
   _id: string;
   title: string;
@@ -88,6 +94,7 @@ export interface Task {
   createdBy: User;
   tags: string[];
   comments: TaskComment[];
+  subtasks: Subtask[];
   order: number;
   estimatedHours?: number;
   createdAt: string;
@@ -104,6 +111,7 @@ export interface CreateTaskInput {
   projectId: string;
   tags?: string[];
   estimatedHours?: number;
+  subtasks?: { title: string; isCompleted: boolean }[];
 }
 
 // ==================== Dashboard Types ====================

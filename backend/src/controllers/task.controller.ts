@@ -19,6 +19,10 @@ const taskSchema = z.object({
   projectId: z.string().min(1, 'Project ID is required'),
   tags: z.array(z.string()).optional().default([]),
   estimatedHours: z.number().min(0).optional(),
+  subtasks: z.array(z.object({
+    title: z.string().min(1),
+    isCompleted: z.boolean().default(false),
+  })).optional().default([]),
 });
 
 // Helper: check project membership
@@ -58,6 +62,7 @@ export const getTasks = async (req: AuthRequest, res: Response, next: NextFuncti
         .populate('assignedTo', 'name email avatar')
         .populate('createdBy', 'name email avatar')
         .populate('projectId', 'title color')
+        .populate('comments.user', 'name email avatar')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -197,7 +202,8 @@ export const updateTask = async (req: AuthRequest, res: Response, next: NextFunc
     const updated = await Task.findByIdAndUpdate(id, parsed.data, { new: true, runValidators: true })
       .populate('assignedTo', 'name email avatar')
       .populate('createdBy', 'name email avatar')
-      .populate('projectId', 'title color');
+      .populate('projectId', 'title color')
+      .populate('comments.user', 'name email avatar');
 
     await logActivity({
       userId: user._id,
@@ -294,7 +300,8 @@ export const updateTaskStatus = async (req: AuthRequest, res: Response, next: Ne
     const updated = await Task.findByIdAndUpdate(id, parsed.data, { new: true })
       .populate('assignedTo', 'name email avatar')
       .populate('createdBy', 'name email avatar')
-      .populate('projectId', 'title color');
+      .populate('projectId', 'title color')
+      .populate('comments.user', 'name email avatar');
 
     await logActivity({
       userId: user._id,

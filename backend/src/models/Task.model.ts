@@ -10,6 +10,12 @@ export interface IComment {
   createdAt: Date;
 }
 
+export interface ISubtask {
+  _id: mongoose.Types.ObjectId;
+  title: string;
+  isCompleted: boolean;
+}
+
 export interface IAttachment {
   _id: mongoose.Types.ObjectId;
   filename: string;
@@ -32,6 +38,7 @@ export interface ITask extends Document {
   tags: string[];
   comments: IComment[];
   attachments: IAttachment[];
+  subtasks: ISubtask[];
   order: number;
   estimatedHours?: number;
   createdAt: Date;
@@ -60,6 +67,11 @@ const attachmentSchema = new Schema<IAttachment>({
   size: { type: Number, required: true },
   uploadedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   uploadedAt: { type: Date, default: Date.now },
+});
+
+const subtaskSchema = new Schema<ISubtask>({
+  title: { type: String, required: true, trim: true },
+  isCompleted: { type: Boolean, default: false },
 });
 
 const taskSchema = new Schema<ITask>(
@@ -114,6 +126,7 @@ const taskSchema = new Schema<ITask>(
       type: Number,
       min: 0,
     },
+    subtasks: [subtaskSchema],
   },
   {
     timestamps: true,

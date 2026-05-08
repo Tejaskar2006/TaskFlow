@@ -126,6 +126,7 @@ export default function KanbanBoard({ tasks, isLoading, projectId, canManage }: 
   const { updateTaskStatus } = useTaskStore();
   const { user } = useAuthStore();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const activeTask = selectedTask ? tasks.find((task) => task._id === selectedTask._id) ?? selectedTask : null;
 
   const onDragEnd = async (result: DropResult) => {
     if (!result.destination) return;
@@ -228,9 +229,9 @@ export default function KanbanBoard({ tasks, isLoading, projectId, canManage }: 
         </div>
       </DragDropContext>
 
-      {selectedTask && (
+      {activeTask && (
         <TaskDetailModal
-          task={selectedTask}
+          task={activeTask}
           onClose={() => setSelectedTask(null)}
           projectId={projectId}
         />
