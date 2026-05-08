@@ -52,10 +52,11 @@ function TaskCard({ task, index, canManage, userId, onClick }: {
           {...provided.draggableProps}
           {...(canDrag ? provided.dragHandleProps : {})}
           onClick={() => onClick(task)}
+          style={provided.draggableProps.style}
           className={cn(
-            'task-card bg-slate-800 border border-slate-700/50 rounded-xl p-3.5 group',
-            canDrag ? 'cursor-pointer' : 'cursor-default',
-            snapshot.isDragging && 'shadow-2xl shadow-indigo-500/20 rotate-1 border-indigo-500/50'
+            'task-card w-full bg-slate-800 border border-slate-700/50 rounded-xl p-3.5 group',
+            canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-default',
+            snapshot.isDragging && 'shadow-2xl shadow-indigo-500/20 border-indigo-500/50'
           )}
         >
           {/* Priority badge */}
@@ -175,11 +176,11 @@ export default function KanbanBoard({ tasks, isLoading, projectId, canManage }: 
   return (
     <>
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 items-stretch gap-4 md:grid-cols-3">
           {COLUMNS.map((col) => {
             const colTasks = getColumnTasks(col.id);
             return (
-              <div key={col.id} className={cn('bg-slate-900/80 border rounded-2xl p-4', col.bg)}>
+              <div key={col.id} className={cn('flex flex-col bg-slate-900/80 border rounded-2xl p-4', col.bg)} style={{ minHeight: '28rem' }}>
                 {/* Column header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -197,16 +198,26 @@ export default function KanbanBoard({ tasks, isLoading, projectId, canManage }: 
                       ref={provided.innerRef}
                       {...provided.droppableProps}
                       className={cn(
-                        'space-y-3 kanban-column min-h-[200px] rounded-xl transition-colors',
-                        snapshot.isDraggingOver && 'bg-indigo-500/5'
+                        'flex flex-col flex-1 space-y-3 rounded-xl transition-all duration-150 p-1',
+                        snapshot.isDraggingOver
+                          ? 'bg-indigo-500/10 ring-2 ring-inset ring-indigo-500/30'
+                          : 'ring-2 ring-inset ring-transparent'
                       )}
+                      style={{ minHeight: '20rem' }}
                     >
-                      {colTasks.length === 0 && !snapshot.isDraggingOver && (
-                        <div className="flex flex-col items-center justify-center py-10 text-slate-600">
+                      {colTasks.length === 0 && (
+                        <div className={cn(
+                          'flex flex-col items-center justify-center flex-1 rounded-lg border-2 border-dashed transition-colors duration-150',
+                          snapshot.isDraggingOver
+                            ? 'border-indigo-500/50 text-indigo-400'
+                            : 'border-slate-800 text-slate-600'
+                        )}>
                           <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center mb-2">
                             <span className="text-lg">{STATUS_CONFIG[col.id].icon}</span>
                           </div>
-                          <p className="text-xs">No tasks yet</p>
+                          <p className="text-xs">
+                            {snapshot.isDraggingOver ? 'Drop here' : 'No tasks yet'}
+                          </p>
                         </div>
                       )}
                       {colTasks.map((task, index) => (
