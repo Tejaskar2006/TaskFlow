@@ -58,14 +58,14 @@ export default function LoginPage() {
 
           <div className="grid grid-cols-2 gap-4">
             {[
-              { label: 'Projects Created', value: '10K+' },
-              { label: 'Tasks Completed', value: '100K+' },
-              { label: 'Teams Onboarded', value: '2K+' },
-              { label: 'Uptime', value: '99.9%' },
-            ].map((stat) => (
-              <div key={stat.label} className="rounded-xl border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
-                <div className="text-2xl font-bold text-white">{stat.value}</div>
-                <div className="text-sm text-white/60">{stat.label}</div>
+              { title: 'Clear ownership', description: 'Assign work, due dates, and priorities so every task has a visible owner.' },
+              { title: 'Live progress', description: 'Track movement across your board as tasks shift from to-do to done.' },
+              { title: 'Team context', description: 'Keep comments, checklists, and updates attached to the work itself.' },
+              { title: 'Focused delivery', description: 'Reduce noise and help your team stay aligned on what matters now.' },
+            ].map((item) => (
+              <div key={item.title} className="rounded-xl border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
+                <div className="text-lg font-semibold text-white">{item.title}</div>
+                <div className="mt-2 text-sm leading-6 text-white/65">{item.description}</div>
               </div>
             ))}
           </div>
@@ -79,7 +79,7 @@ export default function LoginPage() {
               </div>
             ))}
           </div>
-          <p className="text-sm text-white/70">Join thousands of teams already using TaskFlow</p>
+          <p className="text-sm text-white/70">Built for calm, visible teamwork across projects and deadlines.</p>
         </div>
       </div>
 
